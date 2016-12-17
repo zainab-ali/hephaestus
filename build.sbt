@@ -6,7 +6,7 @@ lazy val coverageSettings = Seq(
 lazy val buildSettings = Seq(
   organization := "com.ithaca",
   scalaOrganization := "org.typelevel",
-  scalaVersion := "2.11.8",
+  scalaVersion := "2.12.0",
   name         := "hephaestus",
   version      := "0.1.0-SNAPSHOT"
 )
@@ -60,7 +60,11 @@ lazy val unit = (project in file("unit"))
   .settings(
     moduleName := "hephaestus-unit",
     commonSettings,
-    libraryDependencies += "com.chuusai" %% "shapeless" % "2.3.2"
+    libraryDependencies ++= Seq(
+      "com.chuusai" %% "shapeless" % "2.3.2",
+      "eu.timepit" %% "singleton-ops" % "0.0.3-SNAPSHOT"
+    ),
+    resolvers += Resolver.bintrayRepo("fthomas", "maven")
 )
 
 lazy val root = (project in file(".")).aggregate(core, native, unit)
