@@ -56,4 +56,11 @@ lazy val native = (project in file("native"))
     }
 )
 
-lazy val root = (project in file(".")).aggregate(core, native)
+lazy val unit = (project in file("unit"))
+  .settings(
+    moduleName := "hephaestus-unit",
+    commonSettings,
+    libraryDependencies += "com.chuusai" %% "shapeless" % "2.3.2"
+)
+
+lazy val root = (project in file(".")).aggregate(core, native, unit)
