@@ -71,6 +71,39 @@ object dimensions {
 
   object Invert {
     type Aux[D <: Dimensions[_, _], Out0 <: Dimensions[_, _]] = Invert[D] { type Out = Out0 }
+
+    implicit def invert[N <: HList, D <: HList]: Invert.Aux[Dimensions[N, D], Dimensions[D, N]] =
+      new Invert[Dimensions[N, D]] {
+        type Out = Dimensions[D, N]
+      }
+  }
+
+  trait Power[D <: Dimensions[_, _], I <: Singleton with Int] {
+    type Out <: Dimensions[_, _]
+  }
+
+  object Power extends LowPriorityPower {
+    type Aux[D <: Dimensions[_, _], I <: Singleton with Int, Out0 <: Dimensions[_, _]] = Power[D, I] { type Out = Out0 }
+
+    implicit def dimensionsPower0[D <: Dimensions[_, _]]: Power.Aux[D, 0, Dimensions[HNil, HNil]] = new Power[D, 0] {
+      type Out = Dimensions[HNil, HNil]
+    }
+
+    implicit def dimensionsPower1[D <: Dimensions[_, _]]: Power.Aux[D, 1, D] = new Power[D, 1] {
+      type Out = D
+    }
+  }
+
+  trait LowPriorityPower {
+    implicit def dimensionsPowerPositive[D <: Dimensions[_, _], I <: Singleton with Int, ISuc <: Singleton with Int,
+      DPowPred <: Dimensions[_, _], DPow <: Dimensions[_, _]](
+      implicit
+        pred: Power.Aux[D, I, DPowPred],
+        dm: Multiply.Aux[DPowPred, D, DPow],
+        ev: OpInt.Aux[I + 1, ISuc]
+      ): Power.Aux[D, ISuc, DPow] = new Power[D, ISuc] {
+      type Out = DPow
+    }
   }
 }
 
@@ -163,9 +196,18 @@ object units {
     def apply(q: Quantity[A, U]): Quantity[A, Out]
   }
 
-  //assuming the value can be taken to the power
-  //we have to multiply the prefix by the power
-  //we have to multiply the dimension by the power until the power is 0
-  //if the power is negative, then we need to invert the dimensions
-  //and then we need to multipy the dimensions by themselves until satisfied
+  object Power {
+    type Aux[A, U <: Units[_, _], I <: Singleton with Int, Out0 <: Units[_, _]] = Power[A, U, I] { type Out = Out0 }
+
+    implicit def unitsPowerDouble[I <: Singleton with Int, D <: Dimensions[_, _], P <: Singleton with Int,
+      IP <: Singleton with Int, DP <: Dimensions[_, _]](
+      implicit ev1: dimensions.Power.Aux[D, P, DP],
+        ev: OpInt.Aux[I * P, IP],
+        ev2: ValueOf[P]) : Power.Aux[Double, Units[I, D], P, Units[IP, DP]] =
+      new Power[Double, Units[I, D], P] {
+      type Out = Units[IP, DP]
+      def apply(q: Quantity[Double, Units[I, D]]): Quantity[Double, Out] = 
+        Quantity(math.pow(q.value, ev2.value))
+    }
+  }
 }

@@ -130,5 +130,10 @@ object Foo extends App {
   type E = Dimension.Mass.type :: HNil
   type F = Dimension.Length.type :: HNil
 
-  val s: String = the[ops.units.Multiply[Double, Units[3, C], Units[0, D]]]
+  val s = the[ops.units.Multiply[Double, Units[3, C], Units[0, D]]]
+
+  the[ops.units.Power[Double, Units[3, C], 2]]
+  // val rr = ops.dimensions.Power.dimensionsPowerNegative[C, -2, 2, Dimensions[Dimension.Mass.type :: Dimension.Mass.type :: HNil, HNil],
+  //   Dimensions[HNil, Dimension.Mass.type :: Dimension.Mass.type :: HNil]]
+
 }
