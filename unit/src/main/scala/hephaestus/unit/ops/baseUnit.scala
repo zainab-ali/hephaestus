@@ -105,6 +105,22 @@ object dimensions {
       type Out = DPow
     }
   }
+
+  trait PrettyPrint[H] {
+    def print: String
+  }
+
+  object PrettyPrint {
+
+    implicit def prettyPrintHNil: PrettyPrint[HNil] = new PrettyPrint[HNil] {
+      val show: String = ""
+    }
+
+    implicit def prettyPrintHList[H, T <: HList](implicit hp: PrettyPrint[H],
+      ev: Partition.Aux[T, H, Pref, Suf],
+      
+      tp: PrettyPrint[T]): PrettyPrint[H :: T]
+  }
 }
 
 object units {

@@ -11,7 +11,18 @@ trait Dimension
 
 object Dimension {
   object Mass extends Dimension
-  object Length extends Dimension 
+
+
+  //TODO: should we tie the dimension to the base unit?
+  implicit val massPrettyPrint: PrettyPrint[Mass.type] = new PrettyPrint[Mass.type] {
+    val show: String = "kg"
+  }
+
+  object Length extends Dimension
+
+  implicit val lengthPrettyPrint: PrettyPrint[Length.type] = new PrettyPrint[Length.type] {
+    val show: String = "m"
+  }
 }
 
 /* tag to represent a unit without prefix */
@@ -27,6 +38,7 @@ object MetricPrefix {
   type kilo = MetricPrefix[3]
   type std = MetricPrefix[0]
   type milli = MetricPrefix[-3]
+
 }
 
 /* tag to represent a prefix and a set of positive dimensions and negative dimensions*/
@@ -57,6 +69,25 @@ object Add {
 
 case class Quantity[A, U <: Units[_, _]](value: A) extends AnyVal
 
+trait PrettyPrint[A] {
+  def show: String
+}
+
+object PrettyPrint {
+  implicit def intPrettyPrint[I <: Singleton with Int](implicit v: ValueOf[I]): PrettyPrint[I] = new PrettyPrint[I] {
+    val show: String = s"10^(${v.value})"
+  }
+
+  implicit def prettyPrintHNil: PrettyPrint[HNil] = new PrettyPrint[HNil] {
+    val show: String = ""
+  }
+
+  //TODO: these are wrong! We need to make a specific one which accumulates dimensions
+  implicit def prettyPrintHList[H, T <: HList](implicit hp: PrettyPrint[H], tp: PrettyPrint[T]): PrettyPrint[H :: T] = 
+    new PrettyPrint[H :: T] {
+      val show: String = s"${hp.show}${tp.show}"
+    }
+}
 // /* tag to represent a metric unit with prefix */
 // trait MetricUnit[P, U]
 
@@ -132,7 +163,7 @@ object Foo extends App {
 
   val s = the[ops.units.Multiply[Double, Units[3, C], Units[0, D]]]
 
-  the[ops.units.Power[Double, Units[3, C], 2]]
+ // the[ops.units.Power[Double, Units[3, C], 2]]
   // val rr = ops.dimensions.Power.dimensionsPowerNegative[C, -2, 2, Dimensions[Dimension.Mass.type :: Dimension.Mass.type :: HNil, HNil],
   //   Dimensions[HNil, Dimension.Mass.type :: Dimension.Mass.type :: HNil]]
 
