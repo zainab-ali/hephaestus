@@ -4,6 +4,7 @@ package ops
 
 import shapeless._
 import shapeless.ops.hlist._
+import shapeless.ops.nat.ToInt
 
 import singleton.ops._
 import singleton.ops.impl._
@@ -113,13 +114,15 @@ object dimensions {
   object PrettyPrint {
 
     implicit def prettyPrintHNil: PrettyPrint[HNil] = new PrettyPrint[HNil] {
-      val show: String = ""
+      def print: String = ""
     }
 
-    implicit def prettyPrintHList[H, T <: HList](implicit hp: PrettyPrint[H],
-      ev: Partition.Aux[T, H, Pref, Suf],
-      
-      tp: PrettyPrint[T]): PrettyPrint[H :: T]
+    implicit def prettyPrintHList[H, T <: HList, Pref <: HList, Suf <: HList, Pow <: Nat](implicit hp: PrettyPrint[H],
+      ev: Partition.Aux[H :: T, H, Pref, Suf], len: Length.Aux[Pref, Pow], powInt: ToInt[Pow],
+      sufp: PrettyPrint[Suf]): PrettyPrint[H :: T] = new PrettyPrint[H :: T] {
+      //TODO: raise to the power of the length of the HList of Pref
+      def print: String = s"${hp.print}^${powInt()} ${sufp.print}"
+    }
   }
 }
 

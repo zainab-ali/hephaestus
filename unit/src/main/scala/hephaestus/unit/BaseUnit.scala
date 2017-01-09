@@ -23,6 +23,8 @@ object Dimension {
   implicit val lengthPrettyPrint: PrettyPrint[Length.type] = new PrettyPrint[Length.type] {
     val show: String = "m"
   }
+
+
 }
 
 /* tag to represent a unit without prefix */
@@ -137,8 +139,6 @@ kg m === km g
 kg cm == g m
 
 Thus, model as a MetricPrefix + a HList of dimensions
-
-
   * */
 
 object Foo extends App {
@@ -163,6 +163,16 @@ object Foo extends App {
 
   val s = the[ops.units.Multiply[Double, Units[3, C], Units[0, D]]]
 
+  implicit val lengthPrettyPrintPrint: unit.ops.dimensions.PrettyPrint[Dimension.Length.type] = new unit.ops.dimensions.PrettyPrint[Dimension.Length.type] {
+    def print: String = "m"
+  }
+  implicit val massPrettyPrintPrint: unit.ops.dimensions.PrettyPrint[Dimension.Mass.type] = new unit.ops.dimensions.PrettyPrint[Dimension.Mass.type] {
+    def print: String = "kg"
+  }
+
+  //next should pretty print the prefix and the quantity
+  val pp = the[ops.dimensions.PrettyPrint[Dimension.Length.type :: Dimension.Length.type :: Dimension.Length.type :: Dimension.Mass.type :: HNil]]
+  println(pp.print)
  // the[ops.units.Power[Double, Units[3, C], 2]]
   // val rr = ops.dimensions.Power.dimensionsPowerNegative[C, -2, 2, Dimensions[Dimension.Mass.type :: Dimension.Mass.type :: HNil, HNil],
   //   Dimensions[HNil, Dimension.Mass.type :: Dimension.Mass.type :: HNil]]
