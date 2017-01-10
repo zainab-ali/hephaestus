@@ -106,24 +106,6 @@ object dimensions {
       type Out = DPow
     }
   }
-
-  trait PrettyPrint[H] {
-    def print: String
-  }
-
-  object PrettyPrint {
-
-    implicit def prettyPrintHNil: PrettyPrint[HNil] = new PrettyPrint[HNil] {
-      def print: String = ""
-    }
-
-    implicit def prettyPrintHList[H, T <: HList, Pref <: HList, Suf <: HList, Pow <: Nat](implicit hp: PrettyPrint[H],
-      ev: Partition.Aux[H :: T, H, Pref, Suf], len: Length.Aux[Pref, Pow], powInt: ToInt[Pow],
-      sufp: PrettyPrint[Suf]): PrettyPrint[H :: T] = new PrettyPrint[H :: T] {
-      //TODO: raise to the power of the length of the HList of Pref
-      def print: String = s"${hp.print}^${powInt()} ${sufp.print}"
-    }
-  }
 }
 
 object units {

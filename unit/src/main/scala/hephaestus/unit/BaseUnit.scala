@@ -40,13 +40,47 @@ object MetricPrefix {
   type kilo = MetricPrefix[3]
   type std = MetricPrefix[0]
   type milli = MetricPrefix[-3]
-
 }
 
 /* tag to represent a prefix and a set of positive dimensions and negative dimensions*/
 trait Dimensions[N <: HList, D <: HList]
 
+object Dimensions {
+
+  trait PrettyPrintHList[H] {
+    def show: String
+  }
+
+  object PrettyPrintHList {
+    import shapeless.ops.nat.ToInt
+
+    implicit def prettyPrintHNil: PrettyPrintHList[HNil] = new PrettyPrintHList[HNil] {
+      def show: String = ""
+    }
+
+    implicit def prettyPrintHList[H, T <: HList, Pref <: HList, Suf <: HList, Pow <: Nat](implicit hp: PrettyPrint[H],
+      ev: Partition.Aux[H :: T, H, Pref, Suf], len: Length.Aux[Pref, Pow], powInt: ToInt[Pow],
+      sufp: PrettyPrintHList[Suf]): PrettyPrintHList[H :: T] = new PrettyPrintHList[H :: T] {
+      //TODO: raise to the power of the length of the HList of Pref
+      def show: String = s"${hp.show}^${powInt()} ${sufp.show}"
+    }
+  }
+
+  implicit def dimensionsPrettyPrint[N <: HList, D <: HList](implicit np: PrettyPrintHList[N], dp: PrettyPrintHList[D]): PrettyPrint[Dimensions[N, D]] = 
+    new PrettyPrint[Dimensions[N, D]] {
+      def show: String = s"(${np.show})(${dp.show})^-1"
+    }
+}
+
 trait Units[P, D]
+
+object Units {
+  implicit def unitsPrettyPrint[I <: Singleton with Int, D <: Dimensions[_, _]](
+    implicit ip: PrettyPrint[I], dp: PrettyPrint[D]): PrettyPrint[Units[I, D]] =
+    new PrettyPrint[Units[I, D]] {
+      def show: String = s"${ip.show}${dp.show}"
+    }
+}
 //have evidence that these are equal
 
 // trait Convert[A, I1, I2] {
@@ -163,18 +197,21 @@ object Foo extends App {
 
   val s = the[ops.units.Multiply[Double, Units[3, C], Units[0, D]]]
 
-  implicit val lengthPrettyPrintPrint: unit.ops.dimensions.PrettyPrint[Dimension.Length.type] = new unit.ops.dimensions.PrettyPrint[Dimension.Length.type] {
-    def print: String = "m"
-  }
-  implicit val massPrettyPrintPrint: unit.ops.dimensions.PrettyPrint[Dimension.Mass.type] = new unit.ops.dimensions.PrettyPrint[Dimension.Mass.type] {
-    def print: String = "kg"
-  }
+  val p = the[PrettyPrint[Units[3, A]]]
+  println(p.show)
 
-  //next should pretty print the prefix and the quantity
-  val pp = the[ops.dimensions.PrettyPrint[Dimension.Length.type :: Dimension.Length.type :: Dimension.Length.type :: Dimension.Mass.type :: HNil]]
-  println(pp.print)
  // the[ops.units.Power[Double, Units[3, C], 2]]
   // val rr = ops.dimensions.Power.dimensionsPowerNegative[C, -2, 2, Dimensions[Dimension.Mass.type :: Dimension.Mass.type :: HNil, HNil],
   //   Dimensions[HNil, Dimension.Mass.type :: Dimension.Mass.type :: HNil]]
 
 }
+/*
+File structure:
+ - quantity
+ - units
+ - dimensions
+ - ops/quantity
+ - ops/units
+ - ops/dimensions
+ - syntax/quantity
+ */
